@@ -1,0 +1,52 @@
+# This file is deployment  of mysql image
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-sql
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: my-sql
+  template:
+    metadata:
+      labels:
+        app: my-sql
+    spec:
+      containers:
+      - name: my-sql
+        image: mysql:lts
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: sree1234
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: pvc-volume
+          mountPath: /var/lib/mysql
+        - name: config-map-a
+          mountPath: /docker-entrypoint-initdb.d
+
+      volumes:
+      - name: pvc-volume
+        persistentVolumeClaim:
+          claimName: my-custom-pvc
+      - name: config-map-a
+        configMap:
+          name: my-config-map
+
+---
+# service to expose mysql deployment
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-sql-svc
+spec:
+  selector:
+    app: my-sql
+  ports:
+  - port: 3306
+    targetPort: 3306
+
